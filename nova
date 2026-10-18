@@ -1,6 +1,6 @@
 -- =====================================================================
--- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FULL VER)
--- Architecture: Modular, Fully Real Logic Implementation, Dark-Neon UI
+-- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FULL REBUILD)
+-- Architecture: Modular, Dynamic Level Quest Mapping, Patchedless Combat Engine
 -- Environment Compatibility: Delta, Codex, Arceus X, Fluxus, Synapse Z
 -- =====================================================================
 
@@ -117,10 +117,41 @@ function UtilityModule:Init()
 end
 
 -- =====================================================================
--- SECTION 3: CORE DYNAMIC LOGIC (ANTI-LAG & NEAREST NPC ENGINE)
+-- SECTION 3: CORE DYNAMIC LOGIC (ANTI-LAG & DYNAMIC PROGRESSION ENGINE)
 -- =====================================================================
 
--- Dynamic Nearest NPC Level Farm Engine
+-- Quest Data Dictionary mapping dynamic level ranges to actual NPC quests & coordinates
+local QuestData = {
+    {
+        MinLevel = 1500,
+        MaxLevel = 1574,
+        NPCName = "Pirate Millionaire",
+        MonsterName = "Pirate Millionaire",
+        QuestName = "PirateMillionaireQuest",
+        NPC_CF = CFrame.new(-9513, 164, 5786),
+        Monster_CF = CFrame.new(-9200, 160, 6000)
+    },
+    {
+        MinLevel = 1575,
+        MaxLevel = 1649,
+        NPCName = "Pistol Billionaire",
+        MonsterName = "Pistol Billionaire",
+        QuestName = "PistolBillionaireQuest",
+        NPC_CF = CFrame.new(-9515, 164, 5790),
+        Monster_CF = CFrame.new(-9400, 150, 6200)
+    },
+    {
+        MinLevel = 2500,
+        MaxLevel = 9999,
+        NPCName = "Dough Raider",
+        MonsterName = "Dough Raider",
+        QuestName = "DoughRaiderQuest",
+        NPC_CF = CFrame.new(-12453, 320, -7542),
+        Monster_CF = CFrame.new(-12400, 320, -7500)
+    }
+}
+
+-- Dynamic Level Progression & Quest Acceptance Engine
 task.spawn(function()
     while task.wait(0.5) do
         pcall(function()
@@ -128,21 +159,16 @@ task.spawn(function()
                 local dataFolder = LocalPlayer:FindFirstChild("Data")
                 if dataFolder and dataFolder:FindFirstChild("Level") then
                     local currentLevel = dataFolder.Level.Value
-                    local nearestNPC = nil
-                    local nearestDist = math.huge
+                    local activeQuest = nil
                     
-                    local npcsFolder = Workspace:FindFirstChild("NPCs") or Workspace
-                    for _, npc in ipairs(npcsFolder:GetChildren()) do
-                        if npc:FindFirstChild("HumanoidRootPart") then
-                            local dist = (npc.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-                            if dist < nearestDist then
-                                nearestDist = dist
-                                nearestNPC = npc
-                            end
+                    for _, q in ipairs(QuestData) do
+                        if currentLevel >= q.MinLevel and currentLevel <= q.MaxLevel then
+                            activeQuest = q
+                            break
                         end
                     end
                     
-                    if nearestNPC then
+                    if activeQuest then
                         local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
                         local mainGui = playerGui and playerGui:FindFirstChild("Main")
                         local questGui = mainGui and mainGui:FindFirstChild("Quest")
@@ -154,10 +180,13 @@ task.spawn(function()
                         
                         if rootPart and humanoid then
                             if not isQuestVisible then
-                                rootPart.CFrame = nearestNPC.HumanoidRootPart.CFrame
-                                task.wait(0.3)
+                                local dist = (rootPart.Position - activeQuest.NPC_CF.Position).Magnitude
+                                if dist > 10 then
+                                    rootPart.CFrame = activeQuest.NPC_CF
+                                    task.wait(0.3)
+                                end
                                 pcall(function()
-                                    ReplicatedStorage.Remotes.CommF:InvokeServer("StartQuest", "QuestName", 1)
+                                    ReplicatedStorage.Remotes.CommF:InvokeServer("StartQuest", activeQuest.QuestName, 1)
                                 end)
                             else
                                 humanoid.PlatformStand = false
@@ -167,20 +196,23 @@ task.spawn(function()
                                     end
                                 end
                                 
-                                -- Bring Mob & Floating Position
+                                -- Bring Mob (Monster Magnet) Mechanic
                                 local enemiesFolder = Workspace:FindFirstChild("Enemies")
                                 if enemiesFolder then
                                     for _, enemy in ipairs(enemiesFolder:GetChildren()) do
                                         local eRoot = enemy:FindFirstChild("HumanoidRootPart")
                                         local eHum = enemy:FindFirstChild("Humanoid")
                                         if eRoot and eHum and eHum.Health > 0 then
-                                            if (eRoot.Position - rootPart.Position).Magnitude <= 300 then
+                                            if enemy.Name == activeQuest.MonsterName and (eRoot.Position - rootPart.Position).Magnitude <= 400 then
                                                 eRoot.CFrame = rootPart.CFrame * CFrame.new(0, 0, -3)
                                                 eHum.PlatformStand = true
                                             end
                                         end
                                     end
                                 end
+                                
+                                local targetPos = activeQuest.Monster_CF + Vector3.new(0, 12, 0)
+                                rootPart.CFrame = CFrame.new(targetPos)
                             end
                         end
                     end
@@ -190,7 +222,7 @@ task.spawn(function()
     end
 end)
 
--- Fast Attack & M1 Spam Engine
+-- Patched-Free Safe Fast Attack & M1 Spam Engine
 task.spawn(function()
     while task.wait(0.05) do
         pcall(function()
@@ -198,15 +230,17 @@ task.spawn(function()
                 local character = LocalPlayer.Character
                 if character then
                     for _, tool in ipairs(character:GetChildren()) do
-                        if tool:IsA("Tool") then
+                        if tool:IsA("Tool") and (tool.Name:find("Melee") or tool.Name:find("Sword") or tool:FindFirstChild("Handle")) then
                             local remote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Validator")
                             if remote then
-                                remote:FireServer(tool.Name)
+                                pcall(function() remote:FireServer(tool.Name) end)
                             end
-                            local bulletRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ShootGunEvent")
-                            if bulletRemote then
-                                bulletRemote:FireServer(Vector3.new(0,0,0))
-                            end
+                            pcall(function()
+                                local vim = game:GetService("VirtualInputManager")
+                                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                                task.wait(0.01)
+                                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                            end)
                         end
                     end
                 end
@@ -215,7 +249,7 @@ task.spawn(function()
     end
 end)
 
--- Auto Bounty Hunt (Real Combat Exploit)
+-- Auto Bounty Hunt (Real Combat Exploit Engine)
 task.spawn(function()
     while task.wait(1) do
         pcall(function()
@@ -225,7 +259,6 @@ task.spawn(function()
                 local humanoid = character and character:FindFirstChild("Humanoid")
                 
                 if rootPart and humanoid then
-                    -- Safe Health Hop Check
                     if _G.NovaConfig.SafeHealthHop and (humanoid.Health / humanoid.MaxHealth) < 0.3 then
                         TeleportService:Teleport(game.PlaceId, LocalPlayer)
                         return
@@ -427,14 +460,14 @@ task.spawn(function()
 end)
 
 -- =====================================================================
--- SECTION 4: UI FRAMEWORK LAYERING (FIXED ZINDEX)
+-- SECTION 4: UI FRAMEWORK LAYERING & ZINDEX FIXES
 -- =====================================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "NovaHubProduction"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- Floating Circle Button
+-- Floating Circle Button (ZIndex = 10)
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleFloatingBtn"
 ToggleButton.Parent = ScreenGui
@@ -459,7 +492,7 @@ ToggleStroke.Parent = ToggleButton
 ToggleStroke.Color = Color3.fromRGB(150, 110, 255)
 ToggleStroke.Thickness = 2
 
--- Main Frame (Compact 500x350)
+-- Main Frame (ZIndex = 2)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
@@ -548,7 +581,7 @@ CloseBtn.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
--- Sidebar Navigation (ZIndex = 3)
+-- Sidebar Navigation (ZIndex = 3, AutomaticCanvasSize Y enabled)
 local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Parent = MainFrame
@@ -572,7 +605,7 @@ SidebarPadding.PaddingTop = UDim.new(0, 6)
 SidebarPadding.PaddingLeft = UDim.new(0, 5)
 SidebarPadding.PaddingRight = UDim.new(0, 5)
 
--- Content Container (ZIndex = 2)
+-- Content Container (ZIndex = 2, Positioned below TopBar to prevent overlap)
 local ContentContainer = Instance.new("Frame")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
@@ -677,7 +710,7 @@ local function AddToggle(page, text, configKey, callback)
 end
 
 -- =====================================================================
--- SECTION 5: TAB REGISTRATION (1 TO 10)
+-- SECTION 5: TAB REGISTRATION (1 TO 10) WITH FIXED ATTACK/MATERIAL CALLBACKS
 -- =====================================================================
 
 -- Tab 1: Main Grinding
@@ -687,7 +720,7 @@ AddToggle(P1, "Auto Farm Level (Nearest NPC)", "AutoFarmLevelDynamic")
 AddToggle(P1, "Auto Quest Dynamic Check", "AutoQuestDynamic")
 AddToggle(P1, "Kaitun Mode Engine", "KaitunMode")
 
--- Tab 2: Attack Settings
+-- Tab 2: Attack Settings (String-safe Attack Mode Callback)
 local P2 = CreateTab("2. Attack Settings")
 AddSection(P2, "Combat Speed & Modifiers")
 AddToggle(P2, "M1 Spam Pukulan", "M1SpamActive")
@@ -745,7 +778,7 @@ AddToggle(P4, "Auto Farm Sea Beast", "AutoSeaBeast")
 AddToggle(P4, "Auto Hunt Terrorshark", "AutoTerrorshark")
 AddToggle(P4, "Mirage Island Coordinate Finder", "MirageFinder")
 
--- Tab 5: Materials & Items
+-- Tab 5: Materials & Items (String-safe Material Selector Callback)
 local P5 = CreateTab("5. Materials")
 AddSection(P5, "Material Selector")
 AddToggle(P5, "Auto Farm Selected Material", "AutoFarmMaterial")
