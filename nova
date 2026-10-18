@@ -215,14 +215,39 @@ ScreenGui.Name = "NovaHubProduction"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleFloatingBtn"
+ToggleButton.Parent = ScreenGui
+ToggleButton.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+ToggleButton.Position = UDim2.new(0, 50, 0, 50)
+ToggleButton.Size = UDim2.new(0, 50, 0, 50)
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Text = "⚡"
+ToggleButton.TextColor3 = Color3.fromRGB(150, 110, 255)
+ToggleButton.TextSize = 20
+ToggleButton.Visible = false
+ToggleButton.Active = true
+ToggleButton.Draggable = true
+ToggleButton.ZIndex = 10
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleButton
+
+local ToggleStroke = Instance.new("UIStroke")
+ToggleStroke.Parent = ToggleButton
+ToggleStroke.Color = Color3.fromRGB(150, 110, 255)
+ToggleStroke.Thickness = 2
+
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
-MainFrame.Position = UDim2.new(0.5, -370, 0.5, -225)
-MainFrame.Size = UDim2.new(0, 740, 0, 450)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
+MainFrame.Size = UDim2.new(0, 500, 0, 350)
 MainFrame.Active = true
 MainFrame.Draggable = true
+MainFrame.ZIndex = 2
 
 local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 8)
@@ -237,7 +262,8 @@ local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
-TopBar.Size = UDim2.new(1, 0, 0, 40)
+TopBar.Size = UDim2.new(1, 0, 0, 38)
+TopBar.ZIndex = 3
 
 local TopCorner = Instance.new("UICorner")
 TopCorner.CornerRadius = UDim.new(0, 8)
@@ -246,27 +272,54 @@ TopCorner.Parent = TopBar
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Parent = TopBar
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Position = UDim2.new(0, 15, 0, 0)
-TitleLabel.Size = UDim2.new(0, 350, 1, 0)
+TitleLabel.Position = UDim2.new(0, 12, 0, 0)
+TitleLabel.Size = UDim2.new(0, 300, 1, 0)
 TitleLabel.Font = Enum.Font.GothamBold
-TitleLabel.Text = "⚡ NOVA HUB — BLOX FRUITS (PRODUCTION)"
+TitleLabel.Text = "⚡ NOVA HUB — BLOX FRUITS"
 TitleLabel.TextColor3 = Color3.fromRGB(230, 190, 255)
-TitleLabel.TextSize = 14
+TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.ZIndex = 4
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TopBar
 CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 60)
-CloseBtn.Position = UDim2.new(1, -35, 0.5, -11)
-CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+CloseBtn.Position = UDim2.new(1, -32, 0.5, -10)
+CloseBtn.Size = UDim2.new(0, 20, 0, 20)
 CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseBtn.TextSize = 11
+CloseBtn.TextSize = 10
+CloseBtn.ZIndex = 4
 
 local CloseCorner = Instance.new("UICorner")
 CloseCorner.CornerRadius = UDim.new(0, 4)
 CloseCorner.Parent = CloseBtn
+
+local MinimizeBtn = Instance.new("TextButton")
+MinimizeBtn.Parent = TopBar
+MinimizeBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+MinimizeBtn.Position = UDim2.new(1, -58, 0.5, -10)
+MinimizeBtn.Size = UDim2.new(0, 20, 0, 20)
+MinimizeBtn.Font = Enum.Font.GothamBold
+MinimizeBtn.Text = "—"
+MinimizeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizeBtn.TextSize = 10
+MinimizeBtn.ZIndex = 4
+
+local MinimizeCorner = Instance.new("UICorner")
+MinimizeCorner.CornerRadius = UDim.new(0, 4)
+MinimizeCorner.Parent = MinimizeBtn
+
+MinimizeBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    ToggleButton.Visible = true
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    ToggleButton.Visible = false
+end)
 
 CloseBtn.MouseButton1Click:Connect(function()
     ESPModule:Clear()
@@ -277,11 +330,12 @@ local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = Color3.fromRGB(13, 13, 20)
-Sidebar.Position = UDim2.new(0, 0, 0, 40)
-Sidebar.Size = UDim2.new(0, 185, 1, -40)
-Sidebar.CanvasSize = UDim2.new(0, 0, 0, 680)
-Sidebar.ScrollBarThickness = 3
+Sidebar.Position = UDim2.new(0, 0, 0, 38)
+Sidebar.Size = UDim2.new(0, 150, 1, -38)
+Sidebar.CanvasSize = UDim2.new(0, 0, 0, 600)
+Sidebar.ScrollBarThickness = 2
 Sidebar.ScrollBarImageColor3 = Color3.fromRGB(130, 40, 255)
+Sidebar.ZIndex = 3
 
 local SidebarLayout = Instance.new("UIListLayout")
 SidebarLayout.Parent = Sidebar
@@ -292,8 +346,9 @@ local ContentContainer = Instance.new("Frame")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 190, 0, 45)
-ContentContainer.Size = UDim2.new(1, -195, 1, -50)
+ContentContainer.Position = UDim2.new(0, 155, 0, 42)
+ContentContainer.Size = UDim2.new(1, -160, 1, -45)
+ContentContainer.ZIndex = 2
 
 local Pages = {}
 
@@ -303,25 +358,27 @@ local function CreateTab(tabName)
     local TabBtn = Instance.new("TextButton")
     TabBtn.Parent = Sidebar
     TabBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-    TabBtn.Size = UDim2.new(1, -8, 0, 32)
-    TabBtn.Position = UDim2.new(0, 4, 0, 0)
+    TabBtn.Size = UDim2.new(1, -6, 0, 30)
+    TabBtn.Position = UDim2.new(0, 3, 0, 0)
     TabBtn.Font = Enum.Font.GothamSemibold
     TabBtn.Text = "  " .. tabName
     TabBtn.TextColor3 = Color3.fromRGB(190, 190, 210)
-    TabBtn.TextSize = 12
+    TabBtn.TextSize = 11
     TabBtn.TextXAlignment = Enum.TextXAlignment.Left
+    TabBtn.ZIndex = 3
     
     local TabCorner = Instance.new("UICorner")
-    TabCorner.CornerRadius = UDim.new(0, 5)
+    TabCorner.CornerRadius = UDim.new(0, 4)
     TabCorner.Parent = TabBtn
     
     local Page = Instance.new("ScrollingFrame")
     Page.Parent = ContentContainer
     Page.BackgroundTransparency = 1
     Page.Size = UDim2.new(1, 0, 1, 0)
-    Page.CanvasSize = UDim2.new(0, 0, 0, 750)
+    Page.CanvasSize = UDim2.new(0, 0, 0, 700)
     Page.ScrollBarThickness = 3
     Page.Visible = false
+    Page.ZIndex = 2
     
     local PageLayout = Instance.new("UIListLayout")
     PageLayout.Parent = Page
@@ -342,27 +399,29 @@ local function AddSection(page, text)
     local lbl = Instance.new("TextLabel")
     lbl.Parent = page
     lbl.BackgroundTransparency = 1
-    lbl.Size = UDim2.new(1, -10, 0, 24)
+    lbl.Size = UDim2.new(1, -10, 0, 22)
     lbl.Font = Enum.Font.GothamBold
     lbl.Text = "  " .. string.upper(text)
     lbl.TextColor3 = Color3.fromRGB(150, 110, 255)
-    lbl.TextSize = 12
+    lbl.TextSize = 11
     lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.ZIndex = 2
 end
 
 local function AddToggle(page, text, configKey, callback)
     local btn = Instance.new("TextButton")
     btn.Parent = page
     btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    btn.Size = UDim2.new(1, -10, 0, 34)
+    btn.Size = UDim2.new(1, -10, 0, 30)
     btn.Font = Enum.Font.GothamMedium
     btn.Text = "  " .. text .. " : [ OFF ]"
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 2
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
@@ -395,26 +454,28 @@ AddSection(P2, "Combat Speed & Modifiers")
 local ModeIndicator = Instance.new("TextLabel")
 ModeIndicator.Parent = P2
 ModeIndicator.BackgroundTransparency = 1
-ModeIndicator.Size = UDim2.new(1, -10, 0, 25)
+ModeIndicator.Size = UDim2.new(1, -10, 0, 22)
 ModeIndicator.Font = Enum.Font.GothamBold
 ModeIndicator.Text = "  Active Mode: [ " .. NovaConfig.AttackMode .. " ]"
 ModeIndicator.TextColor3 = Color3.fromRGB(150, 110, 255)
-ModeIndicator.TextSize = 12
+ModeIndicator.TextSize = 11
 ModeIndicator.TextXAlignment = Enum.TextXAlignment.Left
+ModeIndicator.ZIndex = 2
 
 local function AddModeButton(page, modeName, indicatorLabel)
     local btn = Instance.new("TextButton")
     btn.Parent = page
     btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    btn.Size = UDim2.new(1, -10, 0, 34)
+    btn.Size = UDim2.new(1, -10, 0, 30)
     btn.Font = Enum.Font.GothamMedium
     btn.Text = "  Set Mode -> " .. modeName
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 2
     
     local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, 5)
+    corner.CornerRadius = UDim.new(0, 4)
     corner.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
