@@ -1,6 +1,6 @@
 -- =====================================================================
--- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FINAL REBUILD)
--- Architecture: Modular, Dynamic Level Quest Mapping, Patchedless Combat Engine
+-- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FINAL FULL REBUILD)
+-- Architecture: Comprehensive Dynamic Quest Mapping, Safe Combat Engine, Fixed UI Layering
 -- Environment Compatibility: Delta, Codex, Arceus X, Fluxus, Synapse Z
 -- =====================================================================
 
@@ -85,7 +85,7 @@ end
 
 local UtilityModule = {}
 function UtilityModule:Init()
-    -- Anti-AFK
+    -- Anti-AFK Protection
     task.spawn(function()
         while task.wait(5) do
             pcall(function()
@@ -98,7 +98,7 @@ function UtilityModule:Init()
         end
     end)
 
-    -- White Screen & FPS Boost
+    -- White Screen & FPS Boost Mode
     RunService.RenderStepped:Connect(function()
         pcall(function()
             if _G.NovaConfig.WhiteScreen then
@@ -117,51 +117,46 @@ function UtilityModule:Init()
 end
 
 -- =====================================================================
--- SECTION 3: CORE DYNAMIC LOGIC (OPTIMIZED & SAFE MOBILE FARMING)
+-- SECTION 3: CORE DYNAMIC LOGIC (FULL QUEST MAPPING & REAL COMBAT ENGINE)
 -- =====================================================================
 
+-- Comprehensive Quest Data Mapping across all Level Ranges
 local QuestData = {
-    {
-        MinLevel = 1,
-        MaxLevel = 9,
-        NPCName = "Bandit",
-        MonsterName = "Bandit",
-        QuestName = "BanditQuest1",
-        NPC_CF = CFrame.new(1061, 16, 1547),
-        Monster_CF = CFrame.new(1159, 17, 1600)
-    },
-    {
-        MinLevel = 1500,
-        MaxLevel = 1574,
-        NPCName = "Pirate Millionaire",
-        MonsterName = "Pirate Millionaire",
-        QuestName = "PirateMillionaireQuest",
-        NPC_CF = CFrame.new(-9513, 164, 5786),
-        Monster_CF = CFrame.new(-9200, 160, 6000)
-    },
-    {
-        MinLevel = 1575,
-        MaxLevel = 1649,
-        NPCName = "Pistol Billionaire",
-        MonsterName = "Pistol Billionaire",
-        QuestName = "PistolBillionaireQuest",
-        NPC_CF = CFrame.new(-9515, 164, 5790),
-        Monster_CF = CFrame.new(-9400, 150, 6200)
-    },
-    {
-        MinLevel = 2500,
-        MaxLevel = 9999,
-        NPCName = "Dough Raider",
-        MonsterName = "Dough Raider",
-        QuestName = "DoughRaiderQuest",
-        NPC_CF = CFrame.new(-12453, 320, -7542),
-        Monster_CF = CFrame.new(-12400, 320, -7500)
-    }
+    -- First Sea / Early Levels
+    {MinLevel = 1, MaxLevel = 14, NPCName = "Bandit Quest Giver", MonsterName = "Bandit", QuestName = "BanditQuest1", NPC_CF = CFrame.new(1060, 16, 1547), Monster_CF = CFrame.new(1159, 17, 1600)},
+    {MinLevel = 15, MaxLevel = 29, NPCName = "Jungle Quest Giver", MonsterName = "Monkey", QuestName = "JungleQuest", NPC_CF = CFrame.new(-1602, 36, 153), Monster_CF = CFrame.new(-1620, 36, 140)},
+    {MinLevel = 30, MaxLevel = 59, NPCName = "Pirate Quest Giver", MonsterName = "Pirate", QuestName = "BuggyQuest1", NPC_CF = CFrame.new(-1140, 4, 3828), Monster_CF = CFrame.new(-1200, 4, 3900)},
+    {MinLevel = 60, MaxLevel = 89, NPCName = "Desert Quest Giver", MonsterName = "Desert Bandit", QuestName = "DesertQuest", NPC_CF = CFrame.new(896, 6, 4389), Monster_CF = CFrame.new(950, 6, 4450)},
+    {MinLevel = 90, MaxLevel = 119, NPCName = "Snow Quest Giver", MonsterName = "Snow Bandit", QuestName = "SnowQuest", NPC_CF = CFrame.new(1385, 87, -1298), Monster_CF = CFrame.new(1300, 87, -1350)},
+    {MinLevel = 120, MaxLevel = 189, NPCName = "Marine Quest Giver", MonsterName = "Chief Petty Officer", QuestName = "MarineFordQuest2", NPC_CF = CFrame.new(-5030, 28, 4324), Monster_CF = CFrame.new(-4900, 28, 4200)},
+    {MinLevel = 190, MaxLevel = 274, NPCName = "Skypiea Quest Giver", MonsterName = "Sky Bandit", QuestName = "SkyQuest", NPC_CF = CFrame.new(-4842, 717, -2623), Monster_CF = CFrame.new(-4950, 717, -2700)},
+    {MinLevel = 275, MaxLevel = 374, NPCName = "Prison Quest Giver", MonsterName = "Dangerous Prisoner", QuestName = "PrisonerQuest", NPC_CF = CFrame.new(530, 1, 474), Monster_CF = CFrame.new(480, 1, 550)},
+    {MinLevel = 375, MaxLevel = 449, NPCName = "Colosseum Quest Giver", MonsterName = "Toga Warrior", QuestName = "ColosseumQuest", NPC_CF = CFrame.new(-1580, 7, -2980), Monster_CF = CFrame.new(-1500, 7, -3050)},
+    {MinLevel = 450, MaxLevel = 524, NPCName = "Magma Quest Giver", MonsterName = "Military Soldier", QuestName = "MagmaQuest", NPC_CF = CFrame.new(-5310, 12, 8515), Monster_CF = CFrame.new(-5400, 12, 8600)},
+    {MinLevel = 525, MaxLevel = 624, NPCName = "Underwater Quest Giver", MonsterName = "Fishman Warrior", QuestName = "FishmanQuest", NPC_CF = CFrame.new(61122, 18, 1569), Monster_CF = CFrame.new(61000, 18, 1500)},
+    {MinLevel = 625, MaxLevel = 699, NPCName = "Fountain Quest Giver", MonsterName = "Galley Pirate", QuestName = "FountainQuest", NPC_CF = CFrame.new(5258, 38, 4050), Monster_CF = CFrame.new(5500, 38, 4000)},
+    
+    -- Second Sea Levels
+    {MinLevel = 700, MaxLevel = 874, NPCName = "Area 1 Quest Giver", MonsterName = "Raider", QuestName = "Area1Quest", NPC_CF = CFrame.new(-425, 73, 1836), Monster_CF = CFrame.new(-500, 73, 1900)},
+    {MinLevel = 875, MaxLevel = 999, NPCName = "Area 2 Quest Giver", MonsterName = "Mercenary", QuestName = "Area2Quest", NPC_CF = CFrame.new(638, 73, 918), Monster_CF = CFrame.new(700, 73, 950)},
+    {MinLevel = 1000, MaxLevel = 1249, NPCName = "Graveyard Quest Giver", MonsterName = "Zombie", QuestName = "GraveyardQuest", NPC_CF = CFrame.new(-2938, 24, -3130), Monster_CF = CFrame.new(-3000, 24, -3200)},
+    {MinLevel = 1250, MaxLevel = 1349, NPCName = "Ship Quest Giver", MonsterName = "Ship Deckhand", QuestName = "ShipQuest1", NPC_CF = CFrame.new(1038, 125, 32911), Monster_CF = CFrame.new(1100, 125, 33000)},
+    {MinLevel = 1350, MaxLevel = 1499, NPCName = "Frost Quest Giver", MonsterName = "Arctic Warrior", QuestName = "FrostQuest", NPC_CF = CFrame.new(5667, 28, -6482), Monster_CF = CFrame.new(5800, 28, -6500)},
+    
+    -- Third Sea Levels
+    {MinLevel = 1500, MaxLevel = 1574, NPCName = "Pirate Millionaire", MonsterName = "Pirate Millionaire", QuestName = "PirateMillionaireQuest", NPC_CF = CFrame.new(-9513, 164, 5786), Monster_CF = CFrame.new(-9200, 160, 6000)},
+    {MinLevel = 1575, MaxLevel = 1649, NPCName = "Pistol Billionaire", MonsterName = "Pistol Billionaire", QuestName = "PistolBillionaireQuest", NPC_CF = CFrame.new(-9515, 164, 5790), Monster_CF = CFrame.new(-9400, 150, 6200)},
+    {MinLevel = 1650, MaxLevel = 1749, NPCName = "Amazon Quest Giver", MonsterName = "Female Islander", QuestName = "AmazonQuest", NPC_CF = CFrame.new(5833, 52, -1105), Monster_CF = CFrame.new(5900, 52, -1150)},
+    {MinLevel = 1750, MaxLevel = 1899, NPCName = "Marine Tree Quest Giver", MonsterName = "Marine Commodore", QuestName = "MarineTreeQuest", NPC_CF = CFrame.new(-2180, 44, -10190), Monster_CF = CFrame.new(-2250, 44, -10250)},
+    {MinLevel = 1900, MaxLevel = 2049, NPCName = "Haunted Quest Giver", MonsterName = "Reborn Skeleton", QuestName = "HauntedQuest1", NPC_CF = CFrame.new(-9480, 142, 5520), Monster_CF = CFrame.new(-9550, 142, 5600)},
+    {MinLevel = 2050, MaxLevel = 2249, NPCName = "Peanut Quest Giver", MonsterName = "Peanut Scout", QuestName = "PeanutQuest", NPC_CF = CFrame.new(-2120, 38, -12120), Monster_CF = CFrame.new(-2200, 38, -12200)},
+    {MinLevel = 2250, MaxLevel = 2499, NPCName = "Ice Cream Quest Giver", MonsterName = "Ice Cream Chef", QuestName = "IceCreamQuest", NPC_CF = CFrame.new(-820, 66, -10880), Monster_CF = CFrame.new(-900, 66, -10950)},
+    {MinLevel = 2500, MaxLevel = 9999, NPCName = "Dough Raider", MonsterName = "Dough Raider", QuestName = "DoughRaiderQuest", NPC_CF = CFrame.new(-12453, 320, -7542), Monster_CF = CFrame.new(-12400, 320, -7500)}
 }
 
 -- Dynamic Level Progression & Quest Acceptance Engine
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(0.5) do
         pcall(function()
             if _G.NovaConfig.AutoFarmLevelDynamic or _G.NovaConfig.KaitunMode then
                 local dataFolder = LocalPlayer:FindFirstChild("Data")
@@ -204,7 +199,7 @@ task.spawn(function()
                                     end
                                 end
                                 
-                                -- Safe Bring Mob (Monster Magnet) Mechanic
+                                -- Bring Mob (Monster Magnet) Mechanic
                                 local enemiesFolder = Workspace:FindFirstChild("Enemies")
                                 if enemiesFolder then
                                     for _, enemy in ipairs(enemiesFolder:GetChildren()) do
@@ -230,28 +225,22 @@ task.spawn(function()
     end
 end)
 
--- Safe Mobile Fast Attack Engine (No VirtualInputManager crash)
+-- Safe Mobile Fast Attack & M1 Spam Engine (Patchedless Remote firing)
 task.spawn(function()
-    while task.wait(0.1) do
+    while task.wait(0.05) do
         pcall(function()
             if _G.NovaConfig.M1SpamActive or _G.NovaConfig.AttackMode == "Fast Attack" or _G.NovaConfig.AttackMode == "QUANTUM" then
                 local character = LocalPlayer.Character
                 if character then
                     for _, tool in ipairs(character:GetChildren()) do
                         if tool:IsA("Tool") and (tool.Name:find("Melee") or tool.Name:find("Sword") or tool:FindFirstChild("Handle")) then
-                            local remote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Validator")
-                            if remote then
-                                pcall(function() remote:FireServer(tool.Name) end)
-                            end
                             pcall(function()
-                                local localAnimations = tool:FindFirstChildOfClass("Animation")
-                                if localAnimations then
-                                    local animator = character:FindFirstChildOfClass("Humanoid") and character.Humanoid:FindFirstChildOfClass("Animator")
-                                    if animator then
-                                        animator:LoadAnimation(localAnimations):Play()
-                                    end
-                                end
+                                tool:Activate()
                             end)
+                            local netRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Validator")
+                            if netRemote then
+                                pcall(function() netRemote:FireServer(tool.Name) end)
+                            end
                         end
                     end
                 end
@@ -616,7 +605,7 @@ SidebarPadding.PaddingTop = UDim.new(0, 6)
 SidebarPadding.PaddingLeft = UDim.new(0, 5)
 SidebarPadding.PaddingRight = UDim.new(0, 5)
 
--- Content Container (ZIndex = 2, Positioned below TopBar to prevent overlap)
+-- Content Container (ZIndex = 2, Positioned below TopBar)
 local ContentContainer = Instance.new("Frame")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
@@ -721,7 +710,7 @@ local function AddToggle(page, text, configKey, callback)
 end
 
 -- =====================================================================
--- SECTION 5: TAB REGISTRATION (1 TO 10) WITH SAFE STRING CALLBACKS
+-- SECTION 5: TAB REGISTRATION (1 TO 10) WITH SAFE STRING SWITCHING
 -- =====================================================================
 
 -- Tab 1: Main Grinding
@@ -731,7 +720,7 @@ AddToggle(P1, "Auto Farm Level (Nearest NPC)", "AutoFarmLevelDynamic")
 AddToggle(P1, "Auto Quest Dynamic Check", "AutoQuestDynamic")
 AddToggle(P1, "Kaitun Mode Engine", "KaitunMode")
 
--- Tab 2: Attack Settings
+-- Tab 2: Attack Settings (String-Safe Mode Buttons)
 local P2 = CreateTab("2. Attack Settings")
 AddSection(P2, "Combat Speed & Modifiers")
 AddToggle(P2, "M1 Spam Pukulan", "M1SpamActive")
@@ -789,7 +778,7 @@ AddToggle(P4, "Auto Farm Sea Beast", "AutoSeaBeast")
 AddToggle(P4, "Auto Hunt Terrorshark", "AutoTerrorshark")
 AddToggle(P4, "Mirage Island Coordinate Finder", "MirageFinder")
 
--- Tab 5: Materials & Items
+-- Tab 5: Materials & Items (String-Safe Material Selector Buttons)
 local P5 = CreateTab("5. Materials")
 AddSection(P5, "Material Selector")
 AddToggle(P5, "Auto Farm Selected Material", "AutoFarmMaterial")
@@ -835,7 +824,7 @@ AddSection(P5, "Legendary Item Quests")
 AddToggle(P5, "Track Cursed Dual Katana (CDK)", "TrackCDK")
 AddToggle(P5, "Track Soul Guitar", "TrackSoulGuitar")
 
--- Tab 6: Devil Fruit Panel
+-- Tab 6: Devil Fruit Panel (Dynamic Live Dealer Stock)
 local P6 = CreateTab("6. Devil Fruit")
 AddSection(P6, "Live Dealer Stock")
 
@@ -867,14 +856,29 @@ task.spawn(function()
     while task.wait(5) do
         pcall(function()
             local fruits = ReplicatedStorage.Remotes.CommF:InvokeServer("GetFruits")
-            if fruits then
-                local normalText = "Normal Dealer Stock:\n"
-                local mirageText = "Mirage Dealer Stock:\n"
-                for _, f in ipairs(fruits) do
-                    normalText = normalText .. "- " .. tostring(f) .. "\n"
+            if type(fruits) == "table" then
+                local normalList = "Normal Dealer Stock:\n"
+                local mirageList = "Advanced/Mirage Stock:\n"
+                
+                for _, fData in ipairs(fruits) do
+                    if type(fData) == "table" then
+                        local name = fData.Name or tostring(fData[1])
+                        local price = fData.Price or tostring(fData[2]) or "0"
+                        local isOnSale = fData.OnSale or fData.IsStock
+                        local isMirage = fData.MirageStock or fData.Advanced
+                        
+                        if isMirage then
+                            mirageList = mirageList .. "- " .. name .. " ($" .. price .. ")\n"
+                        elseif isOnSale then
+                            normalList = normalList .. "- " .. name .. " ($" .. price .. ")\n"
+                        end
+                    elseif type(fData) == "string" then
+                        normalList = normalList .. "- " .. fData .. "\n"
+                    end
                 end
-                NormalStockLabel.Text = normalText
-                MirageStockLabel.Text = mirageText
+                
+                NormalStockLabel.Text = normalList
+                MirageStockLabel.Text = mirageList
             end
         end)
     end
