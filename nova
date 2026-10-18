@@ -1,5 +1,5 @@
 -- =====================================================================
--- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FULL REBUILD)
+-- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FINAL REBUILD)
 -- Architecture: Modular, Dynamic Level Quest Mapping, Patchedless Combat Engine
 -- Environment Compatibility: Delta, Codex, Arceus X, Fluxus, Synapse Z
 -- =====================================================================
@@ -117,11 +117,19 @@ function UtilityModule:Init()
 end
 
 -- =====================================================================
--- SECTION 3: CORE DYNAMIC LOGIC (ANTI-LAG & DYNAMIC PROGRESSION ENGINE)
+-- SECTION 3: CORE DYNAMIC LOGIC (OPTIMIZED & SAFE MOBILE FARMING)
 -- =====================================================================
 
--- Quest Data Dictionary mapping dynamic level ranges to actual NPC quests & coordinates
 local QuestData = {
+    {
+        MinLevel = 1,
+        MaxLevel = 9,
+        NPCName = "Bandit",
+        MonsterName = "Bandit",
+        QuestName = "BanditQuest1",
+        NPC_CF = CFrame.new(1061, 16, 1547),
+        Monster_CF = CFrame.new(1159, 17, 1600)
+    },
     {
         MinLevel = 1500,
         MaxLevel = 1574,
@@ -153,7 +161,7 @@ local QuestData = {
 
 -- Dynamic Level Progression & Quest Acceptance Engine
 task.spawn(function()
-    while task.wait(0.5) do
+    while task.wait(1) do
         pcall(function()
             if _G.NovaConfig.AutoFarmLevelDynamic or _G.NovaConfig.KaitunMode then
                 local dataFolder = LocalPlayer:FindFirstChild("Data")
@@ -181,9 +189,9 @@ task.spawn(function()
                         if rootPart and humanoid then
                             if not isQuestVisible then
                                 local dist = (rootPart.Position - activeQuest.NPC_CF.Position).Magnitude
-                                if dist > 10 then
+                                if dist > 15 then
                                     rootPart.CFrame = activeQuest.NPC_CF
-                                    task.wait(0.3)
+                                    task.wait(0.5)
                                 end
                                 pcall(function()
                                     ReplicatedStorage.Remotes.CommF:InvokeServer("StartQuest", activeQuest.QuestName, 1)
@@ -196,14 +204,14 @@ task.spawn(function()
                                     end
                                 end
                                 
-                                -- Bring Mob (Monster Magnet) Mechanic
+                                -- Safe Bring Mob (Monster Magnet) Mechanic
                                 local enemiesFolder = Workspace:FindFirstChild("Enemies")
                                 if enemiesFolder then
                                     for _, enemy in ipairs(enemiesFolder:GetChildren()) do
                                         local eRoot = enemy:FindFirstChild("HumanoidRootPart")
                                         local eHum = enemy:FindFirstChild("Humanoid")
                                         if eRoot and eHum and eHum.Health > 0 then
-                                            if enemy.Name == activeQuest.MonsterName and (eRoot.Position - rootPart.Position).Magnitude <= 400 then
+                                            if enemy.Name == activeQuest.MonsterName and (eRoot.Position - rootPart.Position).Magnitude <= 350 then
                                                 eRoot.CFrame = rootPart.CFrame * CFrame.new(0, 0, -3)
                                                 eHum.PlatformStand = true
                                             end
@@ -211,7 +219,7 @@ task.spawn(function()
                                     end
                                 end
                                 
-                                local targetPos = activeQuest.Monster_CF + Vector3.new(0, 12, 0)
+                                local targetPos = activeQuest.Monster_CF + Vector3.new(0, 10, 0)
                                 rootPart.CFrame = CFrame.new(targetPos)
                             end
                         end
@@ -222,9 +230,9 @@ task.spawn(function()
     end
 end)
 
--- Patched-Free Safe Fast Attack & M1 Spam Engine
+-- Safe Mobile Fast Attack Engine (No VirtualInputManager crash)
 task.spawn(function()
-    while task.wait(0.05) do
+    while task.wait(0.1) do
         pcall(function()
             if _G.NovaConfig.M1SpamActive or _G.NovaConfig.AttackMode == "Fast Attack" or _G.NovaConfig.AttackMode == "QUANTUM" then
                 local character = LocalPlayer.Character
@@ -236,10 +244,13 @@ task.spawn(function()
                                 pcall(function() remote:FireServer(tool.Name) end)
                             end
                             pcall(function()
-                                local vim = game:GetService("VirtualInputManager")
-                                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
-                                task.wait(0.01)
-                                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                                local localAnimations = tool:FindFirstChildOfClass("Animation")
+                                if localAnimations then
+                                    local animator = character:FindFirstChildOfClass("Humanoid") and character.Humanoid:FindFirstChildOfClass("Animator")
+                                    if animator then
+                                        animator:LoadAnimation(localAnimations):Play()
+                                    end
+                                end
                             end)
                         end
                     end
@@ -249,9 +260,9 @@ task.spawn(function()
     end
 end)
 
--- Auto Bounty Hunt (Real Combat Exploit Engine)
+-- Auto Bounty Hunt Engine
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(1.5) do
         pcall(function()
             if _G.NovaConfig.AutoBounty then
                 local character = LocalPlayer.Character
@@ -710,7 +721,7 @@ local function AddToggle(page, text, configKey, callback)
 end
 
 -- =====================================================================
--- SECTION 5: TAB REGISTRATION (1 TO 10) WITH FIXED ATTACK/MATERIAL CALLBACKS
+-- SECTION 5: TAB REGISTRATION (1 TO 10) WITH SAFE STRING CALLBACKS
 -- =====================================================================
 
 -- Tab 1: Main Grinding
@@ -720,7 +731,7 @@ AddToggle(P1, "Auto Farm Level (Nearest NPC)", "AutoFarmLevelDynamic")
 AddToggle(P1, "Auto Quest Dynamic Check", "AutoQuestDynamic")
 AddToggle(P1, "Kaitun Mode Engine", "KaitunMode")
 
--- Tab 2: Attack Settings (String-safe Attack Mode Callback)
+-- Tab 2: Attack Settings
 local P2 = CreateTab("2. Attack Settings")
 AddSection(P2, "Combat Speed & Modifiers")
 AddToggle(P2, "M1 Spam Pukulan", "M1SpamActive")
@@ -778,7 +789,7 @@ AddToggle(P4, "Auto Farm Sea Beast", "AutoSeaBeast")
 AddToggle(P4, "Auto Hunt Terrorshark", "AutoTerrorshark")
 AddToggle(P4, "Mirage Island Coordinate Finder", "MirageFinder")
 
--- Tab 5: Materials & Items (String-safe Material Selector Callback)
+-- Tab 5: Materials & Items
 local P5 = CreateTab("5. Materials")
 AddSection(P5, "Material Selector")
 AddToggle(P5, "Auto Farm Selected Material", "AutoFarmMaterial")
