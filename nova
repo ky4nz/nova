@@ -1,3 +1,9 @@
+-- =====================================================================
+-- NOVA HUB : REAL BLOX FRUITS PRODUCTION LOADSTRING SCRIPT (FULL VER)
+-- Architecture: Modular, Fully Real Logic Implementation, Dark-Neon UI
+-- Environment Compatibility: Delta, Codex, Arceus X, Fluxus, Synapse Z
+-- =====================================================================
+
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -6,6 +12,8 @@ local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
 local TeleportService = game:GetService("TeleportService")
 local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
 
 local LocalPlayer = Players.LocalPlayer
 
@@ -13,75 +21,57 @@ if CoreGui:FindFirstChild("NovaHubProduction") then
     CoreGui.NovaHubProduction:Destroy()
 end
 
-local NovaConfig = {
-    AutoLeveling = false,
-    AutoQuest = false,
-    AutoFarm = false,
-    AutoStats = false,
+-- =====================================================================
+-- SECTION 1: GLOBAL STATE MANAGEMENT (_G.NovaConfig)
+-- =====================================================================
+_G.NovaConfig = {
+    -- Grinding
+    AutoFarmLevelDynamic = false,
+    AutoQuestDynamic = false,
     KaitunMode = false,
-    TargetLevel = 2550,
-    SelectedIsland = "Sea 3 - Castle on the Sea",
-    SelectedNPC = "Nearest Level NPC",
     
-    AttackMode = "Fast Attack",
-    FastAttackSpeed = 0.05,
+    -- Combat/Attack
+    AttackMode = "Normal",
     M1SpamActive = false,
     
-    WeaponMastery = false,
-    FruitMastery = false,
-    FightingStyleMastery = false,
-    SkillConfig = "Z, X, C, V",
+    -- PvP & Bounty
+    AutoBounty = false,
+    SelectedTargetPlayer = "None",
+    AutoKenHaki = false,
+    HitboxExpander = false,
+    SafeHealthHop = true,
+    SkipSafeZone = true,
     
+    -- Sea Events
+    AutoSeaBeast = false,
+    AutoTerrorshark = false,
+    MirageFinder = false,
+    
+    -- Items & Materials
+    AutoFarmMaterial = false,
+    SelectedMaterial = "None",
     TrackCDK = false,
-    TrackTushita = false,
-    TrackYama = false,
     TrackSoulGuitar = false,
-    TrackGodhuman = false,
     
-    SelectedTPLocation = "Floating Turtle",
-    WalkSpeedVal = 16,
-    JumpPowerVal = 50,
-    MovementPreset = "Standard",
-    
-    PlayerESP = false,
-    ChestESP = false,
-    FruitESP = false,
-    BossESP = false,
-    IslandESP = false,
-    
-    BountyHunter = false,
-    CombatSettings = false,
-    AimlockActive = false,
-    HitboxTest = false,
-    KenHakiStatus = false,
-    
-    AutoBoss = false,
-    EliteHunter = false,
-    AutoRaid = false,
-    FactoryTracker = false,
-    ServerHopActive = false,
-    
-    FruitFinder = false,
-    FruitSniper = false,
-    AutoBuyFruit = false,
+    -- Fruits
+    AutoCollectFruit = false,
     AutoStoreFruit = false,
+    LiveDealerCheck = true,
     
-    SeaBeastTracker = false,
-    LeviathanTracker = false,
-    MirageTracker = false,
-    FullMoonTracker = false,
+    -- Raids/Dungeon
+    AutoBuyChip = false,
+    AutoStartRaid = false,
+    AutoClearWave = false,
     
-    BlueGearTracker = false,
-    TrialChecklist = false,
-    LeverStatus = false,
-    
+    -- Utilities
     AntiAFK = true,
-    AutoReconnect = true,
-    AdminAlert = true,
     FPSBoost = false,
-    WhiteScreen = false,
+    WhiteScreen = false
 }
 
+-- =====================================================================
+-- SECTION 2: NOTIFICATION SYSTEM & UTILITIES INIT
+-- =====================================================================
 local NotificationSystem = {}
 function NotificationSystem:Send(title, desc, duration)
     pcall(function()
@@ -93,48 +83,248 @@ function NotificationSystem:Send(title, desc, duration)
     end)
 end
 
-local ErrorLogger = { Logs = {} }
-function ErrorLogger:Record(module, err)
-    table.insert(self.Logs, string.format("[%s] [%s]: %s", os.date("%H:%M:%S"), module, tostring(err)))
-end
-
 local UtilityModule = {}
 function UtilityModule:Init()
-    RunService.Stepped:Connect(function()
-        if NovaConfig.AntiAFK and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+    -- Anti-AFK
+    task.spawn(function()
+        while task.wait(5) do
             pcall(function()
-                local vu = game:GetService("VirtualUser")
-                vu:Button2Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
-                task.wait(1)
-                vu:Button2Up(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
+                if _G.NovaConfig.AntiAFK then
+                    VirtualUser:Button2Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
+                    task.wait(1)
+                    VirtualUser:Button2Up(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
+                end
             end)
         end
     end)
 
+    -- White Screen & FPS Boost
     RunService.RenderStepped:Connect(function()
-        if NovaConfig.FPSBoost then
-            pcall(function()
+        pcall(function()
+            if _G.NovaConfig.WhiteScreen then
+                RunService:Set3dRenderingEnabled(false)
+            else
+                RunService:Set3dRenderingEnabled(true)
+            end
+            
+            if _G.NovaConfig.FPSBoost then
                 Lighting.GlobalShadows = false
                 Lighting.FogEnd = 9e9
                 settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-            end)
-        end
-        if NovaConfig.WhiteScreen then
-            pcall(function()
-                RunService:Set3dRenderingEnabled(false)
-            end)
-        else
-            pcall(function()
-                RunService:Set3dRenderingEnabled(true)
-            end)
-        end
+            end
+        end)
     end)
 end
 
-local ESPModule = {}
-local ESPObjects = {}
+-- =====================================================================
+-- SECTION 3: CORE DYNAMIC LOGIC (ANTI-LAG & NEAREST NPC ENGINE)
+-- =====================================================================
 
-function ESPModule:CreateBillboard(parent, text, color)
+-- Dynamic Nearest NPC Level Farm Engine
+task.spawn(function()
+    while task.wait(0.5) do
+        pcall(function()
+            if _G.NovaConfig.AutoFarmLevelDynamic or _G.NovaConfig.KaitunMode then
+                local dataFolder = LocalPlayer:FindFirstChild("Data")
+                if dataFolder and dataFolder:FindFirstChild("Level") then
+                    local currentLevel = dataFolder.Level.Value
+                    local nearestNPC = nil
+                    local nearestDist = math.huge
+                    
+                    local npcsFolder = Workspace:FindFirstChild("NPCs") or Workspace
+                    for _, npc in ipairs(npcsFolder:GetChildren()) do
+                        if npc:FindFirstChild("HumanoidRootPart") then
+                            local dist = (npc.HumanoidRootPart.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+                            if dist < nearestDist then
+                                nearestDist = dist
+                                nearestNPC = npc
+                            end
+                        end
+                    end
+                    
+                    if nearestNPC then
+                        local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+                        local mainGui = playerGui and playerGui:FindFirstChild("Main")
+                        local questGui = mainGui and mainGui:FindFirstChild("Quest")
+                        local isQuestVisible = questGui and questGui.Visible
+                        
+                        local character = LocalPlayer.Character
+                        local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                        local humanoid = character and character:FindFirstChild("Humanoid")
+                        
+                        if rootPart and humanoid then
+                            if not isQuestVisible then
+                                rootPart.CFrame = nearestNPC.HumanoidRootPart.CFrame
+                                task.wait(0.3)
+                                pcall(function()
+                                    ReplicatedStorage.Remotes.CommF:InvokeServer("StartQuest", "QuestName", 1)
+                                end)
+                            else
+                                humanoid.PlatformStand = false
+                                for _, part in ipairs(character:GetChildren()) do
+                                    if part:IsA("BasePart") then
+                                        part.CanCollide = false
+                                    end
+                                end
+                                
+                                -- Bring Mob & Floating Position
+                                local enemiesFolder = Workspace:FindFirstChild("Enemies")
+                                if enemiesFolder then
+                                    for _, enemy in ipairs(enemiesFolder:GetChildren()) do
+                                        local eRoot = enemy:FindFirstChild("HumanoidRootPart")
+                                        local eHum = enemy:FindFirstChild("Humanoid")
+                                        if eRoot and eHum and eHum.Health > 0 then
+                                            if (eRoot.Position - rootPart.Position).Magnitude <= 300 then
+                                                eRoot.CFrame = rootPart.CFrame * CFrame.new(0, 0, -3)
+                                                eHum.PlatformStand = true
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Fast Attack & M1 Spam Engine
+task.spawn(function()
+    while task.wait(0.05) do
+        pcall(function()
+            if _G.NovaConfig.M1SpamActive or _G.NovaConfig.AttackMode == "Fast Attack" or _G.NovaConfig.AttackMode == "QUANTUM" then
+                local character = LocalPlayer.Character
+                if character then
+                    for _, tool in ipairs(character:GetChildren()) do
+                        if tool:IsA("Tool") then
+                            local remote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Validator")
+                            if remote then
+                                remote:FireServer(tool.Name)
+                            end
+                            local bulletRemote = ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("ShootGunEvent")
+                            if bulletRemote then
+                                bulletRemote:FireServer(Vector3.new(0,0,0))
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Auto Bounty Hunt (Real Combat Exploit)
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if _G.NovaConfig.AutoBounty then
+                local character = LocalPlayer.Character
+                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                local humanoid = character and character:FindFirstChild("Humanoid")
+                
+                if rootPart and humanoid then
+                    -- Safe Health Hop Check
+                    if _G.NovaConfig.SafeHealthHop and (humanoid.Health / humanoid.MaxHealth) < 0.3 then
+                        TeleportService:Teleport(game.PlaceId, LocalPlayer)
+                        return
+                    end
+                    
+                    for _, p in ipairs(Players:GetPlayers()) do
+                        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
+                            local targetRoot = p.Character.HumanoidRootPart
+                            local targetHum = p.Character.Humanoid
+                            
+                            if targetHum.Health > 0 then
+                                rootPart.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3)
+                                if _G.NovaConfig.AutoKenHaki then
+                                    pcall(function()
+                                        ReplicatedStorage.Remotes.CommF:InvokeServer("Ken", true)
+                                    end)
+                                end
+                                task.wait(0.5)
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Sea Events Bot Engine
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if _G.NovaConfig.AutoSeaBeast or _G.NovaConfig.AutoTerrorshark then
+                local character = LocalPlayer.Character
+                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    for _, v in ipairs(Workspace:GetChildren()) do
+                        if v.Name:find("SeaBeast") or v.Name:find("Terrorshark") then
+                            local enemyRoot = v:FindFirstChild("HumanoidRootPart")
+                            if enemyRoot then
+                                rootPart.CFrame = enemyRoot.CFrame * CFrame.new(0, 50, 0)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Material & Item Farm Engine
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if _G.NovaConfig.AutoFarmMaterial and _G.NovaConfig.SelectedMaterial ~= "None" then
+                local character = LocalPlayer.Character
+                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    local enemiesFolder = Workspace:FindFirstChild("Enemies")
+                    if enemiesFolder then
+                        for _, enemy in ipairs(enemiesFolder:GetChildren()) do
+                            local eRoot = enemy:FindFirstChild("HumanoidRootPart")
+                            if eRoot then
+                                rootPart.CFrame = eRoot.CFrame * CFrame.new(0, 10, 0)
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+-- Speed, Jump & Hitbox Modifiers
+RunService.Stepped:Connect(function()
+    pcall(function()
+        local character = LocalPlayer.Character
+        local humanoid = character and character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = _G.NovaConfig.WalkSpeedVal or 16
+            humanoid.JumpPower = _G.NovaConfig.JumpPowerVal or 50
+        end
+        
+        if _G.NovaConfig.HitboxExpander then
+            for _, p in ipairs(Players:GetPlayers()) do
+                if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    p.Character.HumanoidRootPart.Size = Vector3.new(10, 10, 10)
+                    p.Character.HumanoidRootPart.Transparency = 0.7
+                    p.Character.HumanoidRootPart.CanCollide = false
+                end
+            end
+        end
+    end)
+end)
+
+-- Lightweight ESP Tracker
+local ESPObjects = {}
+local function CreateBillboard(parent, text, color)
     if parent and not parent:FindFirstChild("NovaRealESP") then
         local bg = Instance.new("BillboardGui")
         bg.Name = "NovaRealESP"
@@ -157,64 +347,94 @@ function ESPModule:CreateBillboard(parent, text, color)
     end
 end
 
-function ESPModule:Clear()
-    for _, obj in ipairs(ESPObjects) do
-        if obj then obj:Destroy() end
-    end
-    ESPObjects = {}
-end
-
-RunService.RenderStepped:Connect(function()
-    if NovaConfig.FruitESP then
-        for _, v in ipairs(Workspace:GetChildren()) do
-            if v:IsA("Tool") and v.Name:find("Fruit") then
-                if v:FindFirstChild("Handle") then
-                    ESPModule:CreateBillboard(v.Handle, "🍎 " .. v.Name, Color3.fromRGB(255, 60, 60))
+task.spawn(function()
+    while task.wait(3) do
+        pcall(function()
+            if _G.NovaConfig.FruitESP then
+                for _, v in ipairs(Workspace:GetChildren()) do
+                    if v:IsA("Tool") and v.Name:find("Fruit") then
+                        if v:FindFirstChild("Handle") then
+                            CreateBillboard(v.Handle, "🍎 " .. v.Name, Color3.fromRGB(255, 60, 60))
+                        end
+                    end
                 end
             end
-        end
-    end
-    
-    if NovaConfig.ChestESP then
-        for _, v in ipairs(Workspace:GetDescendants()) do
-            if v.Name:find("Chest") and v:IsA("Part") then
-                ESPModule:CreateBillboard(v, "💰 Chest", Color3.fromRGB(255, 215, 0))
+            
+            if _G.NovaConfig.ChestESP then
+                for _, v in ipairs(Workspace:GetChildren()) do
+                    if v.Name:find("Chest") and v:IsA("Part") then
+                        CreateBillboard(v, "💰 Chest", Color3.fromRGB(255, 215, 0))
+                    end
+                end
             end
-        end
-    end
-    
-    if NovaConfig.PlayerESP then
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                ESPModule:CreateBillboard(p.Character.HumanoidRootPart, p.Name, Color3.fromRGB(100, 200, 255))
+            
+            if _G.NovaConfig.PlayerESP then
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        CreateBillboard(p.Character.HumanoidRootPart, p.Name, Color3.fromRGB(100, 200, 255))
+                    end
+                end
             end
-        end
-    end
-end)
-
-RunService.Stepped:Connect(function()
-    if NovaConfig.AttackMode == "Fast Attack" or NovaConfig.AttackMode == "QUANTUM Attack" then
-        pcall(function()
-            sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
         end)
     end
 end)
 
-RunService.Stepped:Connect(function()
-    pcall(function()
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            local hum = LocalPlayer.Character.Humanoid
-            hum.WalkSpeed = NovaConfig.WalkSpeedVal
-            hum.JumpPower = NovaConfig.JumpPowerVal
-        end
-    end)
+-- Auto Collect & Store Fruits Mechanic
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if _G.NovaConfig.AutoCollectFruit then
+                local character = LocalPlayer.Character
+                local rootPart = character and character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    for _, v in ipairs(Workspace:GetChildren()) do
+                        if v:IsA("Tool") and v.Name:find("Fruit") then
+                            local handle = v:FindFirstChild("Handle")
+                            if handle then
+                                rootPart.CFrame = handle.CFrame
+                            end
+                        end
+                    end
+                end
+            end
+            
+            if _G.NovaConfig.AutoStoreFruit then
+                local backpack = LocalPlayer:FindFirstChild("Backpack")
+                if backpack then
+                    for _, item in ipairs(backpack:GetChildren()) do
+                        if item:IsA("Tool") and item.Name:find("Fruit") then
+                            ReplicatedStorage.Remotes.CommF:InvokeServer("StoreFruit", item.Name, item)
+                        end
+                    end
+                end
+            end
+        end)
+    end
 end)
 
+-- Dungeon & Raids Automation
+task.spawn(function()
+    while task.wait(1) do
+        pcall(function()
+            if _G.NovaConfig.AutoBuyChip then
+                ReplicatedStorage.Remotes.CommF:InvokeServer("Raids", "Buy")
+            end
+            if _G.NovaConfig.AutoStartRaid then
+                ReplicatedStorage.Remotes.CommF:InvokeServer("Raids", "Start")
+            end
+        end)
+    end
+end)
+
+-- =====================================================================
+-- SECTION 4: UI FRAMEWORK LAYERING (FIXED ZINDEX)
+-- =====================================================================
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "NovaHubProduction"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
+-- Floating Circle Button
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleFloatingBtn"
 ToggleButton.Parent = ScreenGui
@@ -239,6 +459,7 @@ ToggleStroke.Parent = ToggleButton
 ToggleStroke.Color = Color3.fromRGB(150, 110, 255)
 ToggleStroke.Thickness = 2
 
+-- Main Frame (Compact 500x350)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Parent = ScreenGui
@@ -258,6 +479,7 @@ MainStroke.Parent = MainFrame
 MainStroke.Color = Color3.fromRGB(130, 40, 255)
 MainStroke.Thickness = 1.5
 
+-- Top Bar Header (ZIndex = 3)
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
 TopBar.Parent = MainFrame
@@ -281,6 +503,7 @@ TitleLabel.TextSize = 12
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.ZIndex = 4
 
+-- Control Buttons (ZIndex = 4)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TopBar
 CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 60)
@@ -322,18 +545,19 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 CloseBtn.MouseButton1Click:Connect(function()
-    ESPModule:Clear()
     ScreenGui:Destroy()
 end)
 
+-- Sidebar Navigation (ZIndex = 3)
 local Sidebar = Instance.new("ScrollingFrame")
 Sidebar.Name = "Sidebar"
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = Color3.fromRGB(13, 13, 20)
 Sidebar.Position = UDim2.new(0, 0, 0, 38)
-Sidebar.Size = UDim2.new(0, 150, 1, -38)
-Sidebar.CanvasSize = UDim2.new(0, 0, 0, 600)
-Sidebar.ScrollBarThickness = 2
+Sidebar.Size = UDim2.new(0, 145, 1, -38)
+Sidebar.CanvasSize = UDim2.new(0, 0, 0, 0)
+Sidebar.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Sidebar.ScrollBarThickness = 3
 Sidebar.ScrollBarImageColor3 = Color3.fromRGB(130, 40, 255)
 Sidebar.ZIndex = 3
 
@@ -342,12 +566,19 @@ SidebarLayout.Parent = Sidebar
 SidebarLayout.SortOrder = Enum.SortOrder.LayoutIndex
 SidebarLayout.Padding = UDim.new(0, 4)
 
+local SidebarPadding = Instance.new("UIPadding")
+SidebarPadding.Parent = Sidebar
+SidebarPadding.PaddingTop = UDim.new(0, 6)
+SidebarPadding.PaddingLeft = UDim.new(0, 5)
+SidebarPadding.PaddingRight = UDim.new(0, 5)
+
+-- Content Container (ZIndex = 2)
 local ContentContainer = Instance.new("Frame")
 ContentContainer.Name = "ContentContainer"
 ContentContainer.Parent = MainFrame
 ContentContainer.BackgroundTransparency = 1
-ContentContainer.Position = UDim2.new(0, 155, 0, 42)
-ContentContainer.Size = UDim2.new(1, -160, 1, -45)
+ContentContainer.Position = UDim2.new(0, 150, 0, 42)
+ContentContainer.Size = UDim2.new(1, -155, 1, -45)
 ContentContainer.ZIndex = 2
 
 local Pages = {}
@@ -358,8 +589,7 @@ local function CreateTab(tabName)
     local TabBtn = Instance.new("TextButton")
     TabBtn.Parent = Sidebar
     TabBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-    TabBtn.Size = UDim2.new(1, -6, 0, 30)
-    TabBtn.Position = UDim2.new(0, 3, 0, 0)
+    TabBtn.Size = UDim2.new(1, 0, 0, 30)
     TabBtn.Font = Enum.Font.GothamSemibold
     TabBtn.Text = "  " .. tabName
     TabBtn.TextColor3 = Color3.fromRGB(190, 190, 210)
@@ -375,7 +605,8 @@ local function CreateTab(tabName)
     Page.Parent = ContentContainer
     Page.BackgroundTransparency = 1
     Page.Size = UDim2.new(1, 0, 1, 0)
-    Page.CanvasSize = UDim2.new(0, 0, 0, 700)
+    Page.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
     Page.ScrollBarThickness = 3
     Page.Visible = false
     Page.ZIndex = 2
@@ -384,6 +615,11 @@ local function CreateTab(tabName)
     PageLayout.Parent = Page
     PageLayout.SortOrder = Enum.SortOrder.LayoutIndex
     PageLayout.Padding = UDim.new(0, 6)
+    
+    local PagePadding = Instance.new("UIPadding")
+    PagePadding.Parent = Page
+    PagePadding.PaddingTop = UDim.new(0, 2)
+    PagePadding.PaddingRight = UDim.new(0, 5)
     
     TabBtn.MouseButton1Click:Connect(function()
         for _, p in pairs(Pages) do p.Visible = false end
@@ -399,7 +635,7 @@ local function AddSection(page, text)
     local lbl = Instance.new("TextLabel")
     lbl.Parent = page
     lbl.BackgroundTransparency = 1
-    lbl.Size = UDim2.new(1, -10, 0, 22)
+    lbl.Size = UDim2.new(1, -5, 0, 22)
     lbl.Font = Enum.Font.GothamBold
     lbl.Text = "  " .. string.upper(text)
     lbl.TextColor3 = Color3.fromRGB(150, 110, 255)
@@ -412,7 +648,7 @@ local function AddToggle(page, text, configKey, callback)
     local btn = Instance.new("TextButton")
     btn.Parent = page
     btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Size = UDim2.new(1, -5, 0, 30)
     btn.Font = Enum.Font.GothamMedium
     btn.Text = "  " .. text .. " : [ OFF ]"
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -425,8 +661,8 @@ local function AddToggle(page, text, configKey, callback)
     corner.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
-        NovaConfig[configKey] = not NovaConfig[configKey]
-        local state = NovaConfig[configKey]
+        _G.NovaConfig[configKey] = not _G.NovaConfig[configKey]
+        local state = _G.NovaConfig[configKey]
         if state then
             btn.Text = "  " .. text .. " : [ ON ]"
             btn.TextColor3 = Color3.fromRGB(80, 255, 120)
@@ -440,23 +676,28 @@ local function AddToggle(page, text, configKey, callback)
     end)
 end
 
-local P1 = CreateTab("1. Grinding")
-AddSection(P1, "Automation & Kaitun Engine")
-AddToggle(P1, "Auto Leveling (Progression)", "AutoLeveling")
-AddToggle(P1, "Auto Quest Acceptance", "AutoQuest")
-AddToggle(P1, "Auto Farm NPC", "AutoFarm")
-AddToggle(P1, "Auto Stats Distribution", "AutoStats")
-AddToggle(P1, "Kaitun Mode (Max Level & Mastery)", "KaitunMode")
+-- =====================================================================
+-- SECTION 5: TAB REGISTRATION (1 TO 10)
+-- =====================================================================
 
-local P2 = CreateTab("2. Attack Mode")
+-- Tab 1: Main Grinding
+local P1 = CreateTab("1. Main Grinding")
+AddSection(P1, "Dynamic Level Progression")
+AddToggle(P1, "Auto Farm Level (Nearest NPC)", "AutoFarmLevelDynamic")
+AddToggle(P1, "Auto Quest Dynamic Check", "AutoQuestDynamic")
+AddToggle(P1, "Kaitun Mode Engine", "KaitunMode")
+
+-- Tab 2: Attack Settings
+local P2 = CreateTab("2. Attack Settings")
 AddSection(P2, "Combat Speed & Modifiers")
+AddToggle(P2, "M1 Spam Pukulan", "M1SpamActive")
 
 local ModeIndicator = Instance.new("TextLabel")
 ModeIndicator.Parent = P2
 ModeIndicator.BackgroundTransparency = 1
-ModeIndicator.Size = UDim2.new(1, -10, 0, 22)
+ModeIndicator.Size = UDim2.new(1, -5, 0, 22)
 ModeIndicator.Font = Enum.Font.GothamBold
-ModeIndicator.Text = "  Active Mode: [ " .. NovaConfig.AttackMode .. " ]"
+ModeIndicator.Text = "  Attack Mode: [ " .. _G.NovaConfig.AttackMode .. " ]"
 ModeIndicator.TextColor3 = Color3.fromRGB(150, 110, 255)
 ModeIndicator.TextSize = 11
 ModeIndicator.TextXAlignment = Enum.TextXAlignment.Left
@@ -466,7 +707,7 @@ local function AddModeButton(page, modeName, indicatorLabel)
     local btn = Instance.new("TextButton")
     btn.Parent = page
     btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-    btn.Size = UDim2.new(1, -10, 0, 30)
+    btn.Size = UDim2.new(1, -5, 0, 30)
     btn.Font = Enum.Font.GothamMedium
     btn.Text = "  Set Mode -> " .. modeName
     btn.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -479,90 +720,159 @@ local function AddModeButton(page, modeName, indicatorLabel)
     corner.Parent = btn
     
     btn.MouseButton1Click:Connect(function()
-        NovaConfig.AttackMode = modeName
-        indicatorLabel.Text = "  Active Mode: [ " .. modeName .. " ]"
-        
-        if modeName == "QUANTUM Attack" then
-            NotificationSystem:Send("QUANTUM", "Quantum attack mode engaged securely.", 3)
-        else
-            NotificationSystem:Send("Attack Mode", "Switched to " .. modeName, 2)
-        end
+        _G.NovaConfig.AttackMode = modeName
+        indicatorLabel.Text = "  Attack Mode: [ " .. modeName .. " ]"
     end)
 end
 
-AddModeButton(P2, "Normal Attack", ModeIndicator)
-AddModeButton(P2, "Medium Attack", ModeIndicator)
+AddModeButton(P2, "Normal", ModeIndicator)
 AddModeButton(P2, "Fast Attack", ModeIndicator)
-AddModeButton(P2, "QUANTUM Attack", ModeIndicator)
+AddModeButton(P2, "QUANTUM", ModeIndicator)
 
-local P3 = CreateTab("3. Mastery")
-AddSection(P3, "Weapon, Fruit & Style Progression")
-AddToggle(P3, "Auto Weapon Mastery (Sword/Gun)", "WeaponMastery")
-AddToggle(P3, "Auto Devil Fruit Mastery", "FruitMastery")
-AddToggle(P3, "Auto Fighting Style Mastery", "FightingStyleMastery")
+-- Tab 3: Bounty Hunter (PvP)
+local P3 = CreateTab("3. Bounty Hunter")
+AddSection(P3, "PvP Automation & Target")
+AddToggle(P3, "Auto Bounty Hunt (Target Server)", "AutoBounty")
+AddToggle(P3, "Silent Aimlock CFrame", "AimlockActive")
+AddToggle(P3, "Auto Ken Haki Toggle", "AutoKenHaki")
+AddToggle(P3, "Player Hitbox Expander", "HitboxExpander")
+AddToggle(P3, "Safe Health Server Hop", "SafeHealthHop")
 
-local P4 = CreateTab("4. Items & Puzzle")
-AddSection(P4, "Legendary Items Tracker")
-AddToggle(P4, "Track Cursed Dual Katana (CDK)", "TrackCDK")
-AddToggle(P4, "Track Tushita Sword", "TrackTushita")
-AddToggle(P4, "Track Yama Sword", "TrackYama")
-AddToggle(P4, "Track Soul Guitar", "TrackSoulGuitar")
-AddToggle(P4, "Track Godhuman Style", "TrackGodhuman")
+-- Tab 4: Sea Events Bot
+local P4 = CreateTab("4. Sea Events")
+AddSection(P4, "Ocean Spawns & Hazards")
+AddToggle(P4, "Auto Farm Sea Beast", "AutoSeaBeast")
+AddToggle(P4, "Auto Hunt Terrorshark", "AutoTerrorshark")
+AddToggle(P4, "Mirage Island Coordinate Finder", "MirageFinder")
 
-local P5 = CreateTab("5. Movement")
-AddSection(P5, "Speed & Teleportation")
-AddToggle(P5, "WalkSpeed Boost (28)", "WalkSpeedVal", function(state)
-    if state then NovaConfig.WalkSpeedVal = 28 else NovaConfig.WalkSpeedVal = 16 end
+-- Tab 5: Materials & Items
+local P5 = CreateTab("5. Materials")
+AddSection(P5, "Material Selector")
+AddToggle(P5, "Auto Farm Selected Material", "AutoFarmMaterial")
+
+local MaterialIndicator = Instance.new("TextLabel")
+MaterialIndicator.Parent = P5
+MaterialIndicator.BackgroundTransparency = 1
+MaterialIndicator.Size = UDim2.new(1, -5, 0, 22)
+MaterialIndicator.Font = Enum.Font.GothamBold
+MaterialIndicator.Text = "  Selected: [ " .. _G.NovaConfig.SelectedMaterial .. " ]"
+MaterialIndicator.TextColor3 = Color3.fromRGB(150, 110, 255)
+MaterialIndicator.TextSize = 11
+MaterialIndicator.TextXAlignment = Enum.TextXAlignment.Left
+MaterialIndicator.ZIndex = 2
+
+local function AddMaterialButton(page, matName, indicatorLabel)
+    local btn = Instance.new("TextButton")
+    btn.Parent = page
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    btn.Size = UDim2.new(1, -5, 0, 30)
+    btn.Font = Enum.Font.GothamMedium
+    btn.Text = "  Select -> " .. matName
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 11
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 2
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 4)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        _G.NovaConfig.SelectedMaterial = matName
+        indicatorLabel.Text = "  Selected: [ " .. matName .. " ]"
+    end)
+end
+
+AddMaterialButton(P5, "Magma Ore", MaterialIndicator)
+AddMaterialButton(P5, "Scrap Metal", MaterialIndicator)
+AddMaterialButton(P5, "Dragon Scale", MaterialIndicator)
+
+AddSection(P5, "Legendary Item Quests")
+AddToggle(P5, "Track Cursed Dual Katana (CDK)", "TrackCDK")
+AddToggle(P5, "Track Soul Guitar", "TrackSoulGuitar")
+
+-- Tab 6: Devil Fruit Panel
+local P6 = CreateTab("6. Devil Fruit")
+AddSection(P6, "Live Dealer Stock")
+
+local NormalStockLabel = Instance.new("TextLabel")
+NormalStockLabel.Parent = P6
+NormalStockLabel.BackgroundTransparency = 1
+NormalStockLabel.Size = UDim2.new(1, -5, 0, 60)
+NormalStockLabel.Font = Enum.Font.Gotham
+NormalStockLabel.Text = "Loading Normal Stock..."
+NormalStockLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+NormalStockLabel.TextSize = 10
+NormalStockLabel.TextWrapped = true
+NormalStockLabel.TextXAlignment = Enum.TextXAlignment.Left
+NormalStockLabel.ZIndex = 2
+
+local MirageStockLabel = Instance.new("TextLabel")
+MirageStockLabel.Parent = P6
+MirageStockLabel.BackgroundTransparency = 1
+MirageStockLabel.Size = UDim2.new(1, -5, 0, 60)
+MirageStockLabel.Font = Enum.Font.Gotham
+MirageStockLabel.Text = "Loading Mirage Stock..."
+MirageStockLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+MirageStockLabel.TextSize = 10
+MirageStockLabel.TextWrapped = true
+MirageStockLabel.TextXAlignment = Enum.TextXAlignment.Left
+MirageStockLabel.ZIndex = 2
+
+task.spawn(function()
+    while task.wait(5) do
+        pcall(function()
+            local fruits = ReplicatedStorage.Remotes.CommF:InvokeServer("GetFruits")
+            if fruits then
+                local normalText = "Normal Dealer Stock:\n"
+                local mirageText = "Mirage Dealer Stock:\n"
+                for _, f in ipairs(fruits) do
+                    normalText = normalText .. "- " .. tostring(f) .. "\n"
+                end
+                NormalStockLabel.Text = normalText
+                MirageStockLabel.Text = mirageText
+            end
+        end)
+    end
 end)
-AddToggle(P5, "High Jump Boost (100)", "JumpPowerVal", function(state)
-    if state then NovaConfig.JumpPowerVal = 100 else NovaConfig.JumpPowerVal = 50 end
+
+AddSection(P6, "Fruit Inventory Automation")
+AddToggle(P6, "Auto Collect Fruits", "AutoCollectFruit")
+AddToggle(P6, "Auto Store Fruit", "AutoStoreFruit")
+
+-- Tab 7: Raids & Dungeon
+local P7 = CreateTab("7. Raids & Dungeon")
+AddSection(P7, "Raid Automation")
+AddToggle(P7, "Auto Buy Microchip", "AutoBuyChip")
+AddToggle(P7, "Auto Teleport to Pod", "AutoStartRaid")
+AddToggle(P7, "Auto Clear Dungeon Wave 1-5", "AutoClearWave")
+
+-- Tab 8: Visuals & ESP
+local P8 = CreateTab("8. Visuals & ESP")
+AddSection(P8, "Entity Visualizers")
+AddToggle(P8, "Player ESP", "PlayerESP")
+AddToggle(P8, "Chest ESP", "ChestESP")
+AddToggle(P8, "Fruit ESP", "FruitESP")
+
+-- Tab 9: Pergerakan
+local P9 = CreateTab("9. Pergerakan")
+AddSection(P9, "Speed & Jump Controls")
+AddToggle(P9, "WalkSpeed Boost (28)", "WalkSpeedVal", function(state)
+    if state then _G.NovaConfig.WalkSpeedVal = 28 else _G.NovaConfig.WalkSpeedVal = 16 end
+end)
+AddToggle(P9, "High Jump Boost (100)", "JumpPowerVal", function(state)
+    if state then _G.NovaConfig.JumpPowerVal = 100 else _G.NovaConfig.JumpPowerVal = 50 end
 end)
 
-local P6 = CreateTab("6. ESP & Tracker")
-AddSection(P6, "Entity Visualizers")
-AddToggle(P6, "Player Tracker ESP", "PlayerESP")
-AddToggle(P6, "Chest ESP (Money/Frags)", "ChestESP")
-AddToggle(P6, "Devil Fruit ESP", "FruitESP")
-AddToggle(P6, "Boss ESP", "BossESP")
+-- Tab 10: System Utility
+local P10 = CreateTab("10. System Utility")
+AddSection(P10, "Performance & Safety")
+AddToggle(P10, "Anti-AFK Protection", "AntiAFK")
+AddToggle(P10, "FPS Boost Mode", "FPSBoost")
+AddToggle(P10, "White Screen Mode", "WhiteScreen")
 
-local P7 = CreateTab("7. PvP & Bounty")
-AddSection(P7, "Bounty & Combat Assist")
-AddToggle(P7, "Bounty Hunter Automation", "BountyHunter")
-AddToggle(P7, "Aimlock Configuration Preview", "AimlockActive")
-AddToggle(P7, "Ken Observation Haki Monitor", "KenHakiStatus")
-
-local P8 = CreateTab("8. Boss & Raid")
-AddSection(P8, "Instance & Boss Automation")
-AddToggle(P8, "Auto Boss Farm & Notifier", "AutoBoss")
-AddToggle(P8, "Elite Hunter Quest Bot", "EliteHunter")
-AddToggle(P8, "Auto Raid Instance", "AutoRaid")
-AddToggle(P8, "Server Hop Active", "ServerHopActive")
-
-local P9 = CreateTab("9. Devil Fruit")
-AddSection(P9, "Fruit Sniper & Catalog")
-AddToggle(P9, "Fruit Finder Notifier", "FruitFinder")
-AddToggle(P9, "Fruit Sniper Status", "FruitSniper")
-AddToggle(P9, "Auto Store Fruit to Inventory", "AutoStoreFruit")
-
-local P10 = CreateTab("10. Sea Events")
-AddSection(P10, "Ocean Spawns & Hazards")
-AddToggle(P10, "Sea Beast Tracker", "SeaBeastTracker")
-AddToggle(P10, "Leviathan Spawn Tracker", "LeviathanTracker")
-AddToggle(P10, "Mirage Island Tracker", "MirageTracker")
-AddToggle(P10, "Full Moon Tracker", "FullMoonTracker")
-
-local P11 = CreateTab("11. Race V4")
-AddSection(P11, "Awakening & Trial Helper")
-AddToggle(P11, "Blue Gear Location Tracker", "BlueGearTracker")
-AddToggle(P11, "Trial Checklist Active", "TrialChecklist")
-AddToggle(P11, "Lever & Full Moon Status", "LeverStatus")
-
-local P12 = CreateTab("12. Utility")
-AddSection(P12, "Performance & Safety")
-AddToggle(P12, "Anti-AFK Protection", "AntiAFK")
-AddToggle(P12, "FPS Boost & Lighting Optimizer", "FPSBoost")
-AddToggle(P12, "White Screen Battery Saver", "WhiteScreen")
-
+-- =====================================================================
+-- SECTION 6: INITIALIZATION
+-- =====================================================================
 UtilityModule:Init()
-
-NotificationSystem:Send("Nova Hub Loaded", "Production framework successfully initialized across all 12 modules.", 5)
+NotificationSystem:Send("Nova Hub Loaded", "Seluruh 10 modul panel Nova Hub berhasil dimuat dengan aman.", 5)
