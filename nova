@@ -1,0 +1,507 @@
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local TeleportService = game:GetService("TeleportService")
+local Lighting = game:GetService("Lighting")
+
+local LocalPlayer = Players.LocalPlayer
+
+if CoreGui:FindFirstChild("NovaHubProduction") then
+    CoreGui.NovaHubProduction:Destroy()
+end
+
+local NovaConfig = {
+    AutoLeveling = false,
+    AutoQuest = false,
+    AutoFarm = false,
+    AutoStats = false,
+    KaitunMode = false,
+    TargetLevel = 2550,
+    SelectedIsland = "Sea 3 - Castle on the Sea",
+    SelectedNPC = "Nearest Level NPC",
+    
+    AttackMode = "Fast Attack",
+    FastAttackSpeed = 0.05,
+    M1SpamActive = false,
+    
+    WeaponMastery = false,
+    FruitMastery = false,
+    FightingStyleMastery = false,
+    SkillConfig = "Z, X, C, V",
+    
+    TrackCDK = false,
+    TrackTushita = false,
+    TrackYama = false,
+    TrackSoulGuitar = false,
+    TrackGodhuman = false,
+    
+    SelectedTPLocation = "Floating Turtle",
+    WalkSpeedVal = 16,
+    JumpPowerVal = 50,
+    MovementPreset = "Standard",
+    
+    PlayerESP = false,
+    ChestESP = false,
+    FruitESP = false,
+    BossESP = false,
+    IslandESP = false,
+    
+    BountyHunter = false,
+    CombatSettings = false,
+    AimlockActive = false,
+    HitboxTest = false,
+    KenHakiStatus = false,
+    
+    AutoBoss = false,
+    EliteHunter = false,
+    AutoRaid = false,
+    FactoryTracker = false,
+    ServerHopActive = false,
+    
+    FruitFinder = false,
+    FruitSniper = false,
+    AutoBuyFruit = false,
+    AutoStoreFruit = false,
+    
+    SeaBeastTracker = false,
+    LeviathanTracker = false,
+    MirageTracker = false,
+    FullMoonTracker = false,
+    
+    BlueGearTracker = false,
+    TrialChecklist = false,
+    LeverStatus = false,
+    
+    AntiAFK = true,
+    AutoReconnect = true,
+    AdminAlert = true,
+    FPSBoost = false,
+    WhiteScreen = false,
+}
+
+local NotificationSystem = {}
+function NotificationSystem:Send(title, desc, duration)
+    pcall(function()
+        game.StarterGui:SetCore("SendNotification", {
+            Title = title or "Nova Hub",
+            Text = desc or "",
+            Duration = duration or 4
+        })
+    end)
+end
+
+local ErrorLogger = { Logs = {} }
+function ErrorLogger:Record(module, err)
+    table.insert(self.Logs, string.format("[%s] [%s]: %s", os.date("%H:%M:%S"), module, tostring(err)))
+end
+
+local UtilityModule = {}
+function UtilityModule:Init()
+    RunService.Stepped:Connect(function()
+        if NovaConfig.AntiAFK and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            pcall(function()
+                local vu = game:GetService("VirtualUser")
+                vu:Button2Down(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
+                task.wait(1)
+                vu:Button2Up(Vector2.new(0,0), Workspace.CurrentCamera.CFrame)
+            end)
+        end
+    end)
+
+    RunService.RenderStepped:Connect(function()
+        if NovaConfig.FPSBoost then
+            pcall(function()
+                Lighting.GlobalShadows = false
+                Lighting.FogEnd = 9e9
+                settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            end)
+        end
+        if NovaConfig.WhiteScreen then
+            pcall(function()
+                RunService:Set3dRenderingEnabled(false)
+            end)
+        else
+            pcall(function()
+                RunService:Set3dRenderingEnabled(true)
+            end)
+        end
+    end)
+end
+
+local ESPModule = {}
+local ESPObjects = {}
+
+function ESPModule:CreateBillboard(parent, text, color)
+    if parent and not parent:FindFirstChild("NovaRealESP") then
+        local bg = Instance.new("BillboardGui")
+        bg.Name = "NovaRealESP"
+        bg.AlwaysOnTop = true
+        bg.Size = UDim2.new(0, 100, 0, 40)
+        bg.StudsOffset = Vector3.new(0, 3, 0)
+        
+        local txt = Instance.new("TextLabel")
+        txt.Parent = bg
+        txt.BackgroundTransparency = 1
+        txt.Size = UDim2.new(1, 0, 1, 0)
+        txt.Font = Enum.Font.GothamBold
+        txt.Text = text
+        txt.TextColor3 = color
+        txt.TextSize = 12
+        txt.TextStrokeTransparency = 0.4
+        
+        bg.Parent = parent
+        table.insert(ESPObjects, bg)
+    end
+end
+
+function ESPModule:Clear()
+    for _, obj in ipairs(ESPObjects) do
+        if obj then obj:Destroy() end
+    end
+    ESPObjects = {}
+end
+
+RunService.RenderStepped:Connect(function()
+    if NovaConfig.FruitESP then
+        for _, v in ipairs(Workspace:GetChildren()) do
+            if v:IsA("Tool") and v.Name:find("Fruit") then
+                if v:FindFirstChild("Handle") then
+                    ESPModule:CreateBillboard(v.Handle, "🍎 " .. v.Name, Color3.fromRGB(255, 60, 60))
+                end
+            end
+        end
+    end
+    
+    if NovaConfig.ChestESP then
+        for _, v in ipairs(Workspace:GetDescendants()) do
+            if v.Name:find("Chest") and v:IsA("Part") then
+                ESPModule:CreateBillboard(v, "💰 Chest", Color3.fromRGB(255, 215, 0))
+            end
+        end
+    end
+    
+    if NovaConfig.PlayerESP then
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                ESPModule:CreateBillboard(p.Character.HumanoidRootPart, p.Name, Color3.fromRGB(100, 200, 255))
+            end
+        end
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if NovaConfig.AttackMode == "Fast Attack" or NovaConfig.AttackMode == "QUANTUM Attack" then
+        pcall(function()
+            sethiddenproperty(LocalPlayer, "SimulationRadius", math.huge)
+        end)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    pcall(function()
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            local hum = LocalPlayer.Character.Humanoid
+            hum.WalkSpeed = NovaConfig.WalkSpeedVal
+            hum.JumpPower = NovaConfig.JumpPowerVal
+        end
+    end)
+end)
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NovaHubProduction"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Parent = ScreenGui
+MainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 16)
+MainFrame.Position = UDim2.new(0.5, -370, 0.5, -225)
+MainFrame.Size = UDim2.new(0, 740, 0, 450)
+MainFrame.Active = true
+MainFrame.Draggable = true
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 8)
+MainCorner.Parent = MainFrame
+
+local MainStroke = Instance.new("UIStroke")
+MainStroke.Parent = MainFrame
+MainStroke.Color = Color3.fromRGB(130, 40, 255)
+MainStroke.Thickness = 1.5
+
+local TopBar = Instance.new("Frame")
+TopBar.Name = "TopBar"
+TopBar.Parent = MainFrame
+TopBar.BackgroundColor3 = Color3.fromRGB(16, 16, 24)
+TopBar.Size = UDim2.new(1, 0, 0, 40)
+
+local TopCorner = Instance.new("UICorner")
+TopCorner.CornerRadius = UDim.new(0, 8)
+TopCorner.Parent = TopBar
+
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Parent = TopBar
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Position = UDim2.new(0, 15, 0, 0)
+TitleLabel.Size = UDim2.new(0, 350, 1, 0)
+TitleLabel.Font = Enum.Font.GothamBold
+TitleLabel.Text = "⚡ NOVA HUB — BLOX FRUITS (PRODUCTION)"
+TitleLabel.TextColor3 = Color3.fromRGB(230, 190, 255)
+TitleLabel.TextSize = 14
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Parent = TopBar
+CloseBtn.BackgroundColor3 = Color3.fromRGB(220, 50, 60)
+CloseBtn.Position = UDim2.new(1, -35, 0.5, -11)
+CloseBtn.Size = UDim2.new(0, 22, 0, 22)
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 11
+
+local CloseCorner = Instance.new("UICorner")
+CloseCorner.CornerRadius = UDim.new(0, 4)
+CloseCorner.Parent = CloseBtn
+
+CloseBtn.MouseButton1Click:Connect(function()
+    ESPModule:Clear()
+    ScreenGui:Destroy()
+end)
+
+local Sidebar = Instance.new("ScrollingFrame")
+Sidebar.Name = "Sidebar"
+Sidebar.Parent = MainFrame
+Sidebar.BackgroundColor3 = Color3.fromRGB(13, 13, 20)
+Sidebar.Position = UDim2.new(0, 0, 0, 40)
+Sidebar.Size = UDim2.new(0, 185, 1, -40)
+Sidebar.CanvasSize = UDim2.new(0, 0, 0, 680)
+Sidebar.ScrollBarThickness = 3
+Sidebar.ScrollBarImageColor3 = Color3.fromRGB(130, 40, 255)
+
+local SidebarLayout = Instance.new("UIListLayout")
+SidebarLayout.Parent = Sidebar
+SidebarLayout.SortOrder = Enum.SortOrder.LayoutIndex
+SidebarLayout.Padding = UDim.new(0, 4)
+
+local ContentContainer = Instance.new("Frame")
+ContentContainer.Name = "ContentContainer"
+ContentContainer.Parent = MainFrame
+ContentContainer.BackgroundTransparency = 1
+ContentContainer.Position = UDim2.new(0, 190, 0, 45)
+ContentContainer.Size = UDim2.new(1, -195, 1, -50)
+
+local Pages = {}
+
+local function CreateTab(tabName)
+    local index = #Pages + 1
+    
+    local TabBtn = Instance.new("TextButton")
+    TabBtn.Parent = Sidebar
+    TabBtn.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+    TabBtn.Size = UDim2.new(1, -8, 0, 32)
+    TabBtn.Position = UDim2.new(0, 4, 0, 0)
+    TabBtn.Font = Enum.Font.GothamSemibold
+    TabBtn.Text = "  " .. tabName
+    TabBtn.TextColor3 = Color3.fromRGB(190, 190, 210)
+    TabBtn.TextSize = 12
+    TabBtn.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local TabCorner = Instance.new("UICorner")
+    TabCorner.CornerRadius = UDim.new(0, 5)
+    TabCorner.Parent = TabBtn
+    
+    local Page = Instance.new("ScrollingFrame")
+    Page.Parent = ContentContainer
+    Page.BackgroundTransparency = 1
+    Page.Size = UDim2.new(1, 0, 1, 0)
+    Page.CanvasSize = UDim2.new(0, 0, 0, 750)
+    Page.ScrollBarThickness = 3
+    Page.Visible = false
+    
+    local PageLayout = Instance.new("UIListLayout")
+    PageLayout.Parent = Page
+    PageLayout.SortOrder = Enum.SortOrder.LayoutIndex
+    PageLayout.Padding = UDim.new(0, 6)
+    
+    TabBtn.MouseButton1Click:Connect(function()
+        for _, p in pairs(Pages) do p.Visible = false end
+        Page.Visible = true
+    end)
+    
+    if index == 1 then Page.Visible = true end
+    table.insert(Pages, Page)
+    return Page
+end
+
+local function AddSection(page, text)
+    local lbl = Instance.new("TextLabel")
+    lbl.Parent = page
+    lbl.BackgroundTransparency = 1
+    lbl.Size = UDim2.new(1, -10, 0, 24)
+    lbl.Font = Enum.Font.GothamBold
+    lbl.Text = "  " .. string.upper(text)
+    lbl.TextColor3 = Color3.fromRGB(150, 110, 255)
+    lbl.TextSize = 12
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+end
+
+local function AddToggle(page, text, configKey, callback)
+    local btn = Instance.new("TextButton")
+    btn.Parent = page
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    btn.Size = UDim2.new(1, -10, 0, 34)
+    btn.Font = Enum.Font.GothamMedium
+    btn.Text = "  " .. text .. " : [ OFF ]"
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        NovaConfig[configKey] = not NovaConfig[configKey]
+        local state = NovaConfig[configKey]
+        if state then
+            btn.Text = "  " .. text .. " : [ ON ]"
+            btn.TextColor3 = Color3.fromRGB(80, 255, 120)
+            btn.BackgroundColor3 = Color3.fromRGB(26, 42, 32)
+        else
+            btn.Text = "  " .. text .. " : [ OFF ]"
+            btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+            btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+        end
+        if callback then pcall(function() callback(state) end) end
+    end)
+end
+
+local P1 = CreateTab("1. Grinding")
+AddSection(P1, "Automation & Kaitun Engine")
+AddToggle(P1, "Auto Leveling (Progression)", "AutoLeveling")
+AddToggle(P1, "Auto Quest Acceptance", "AutoQuest")
+AddToggle(P1, "Auto Farm NPC", "AutoFarm")
+AddToggle(P1, "Auto Stats Distribution", "AutoStats")
+AddToggle(P1, "Kaitun Mode (Max Level & Mastery)", "KaitunMode")
+
+local P2 = CreateTab("2. Attack Mode")
+AddSection(P2, "Combat Speed & Modifiers")
+
+local ModeIndicator = Instance.new("TextLabel")
+ModeIndicator.Parent = P2
+ModeIndicator.BackgroundTransparency = 1
+ModeIndicator.Size = UDim2.new(1, -10, 0, 25)
+ModeIndicator.Font = Enum.Font.GothamBold
+ModeIndicator.Text = "  Active Mode: [ " .. NovaConfig.AttackMode .. " ]"
+ModeIndicator.TextColor3 = Color3.fromRGB(150, 110, 255)
+ModeIndicator.TextSize = 12
+ModeIndicator.TextXAlignment = Enum.TextXAlignment.Left
+
+local function AddModeButton(page, modeName, indicatorLabel)
+    local btn = Instance.new("TextButton")
+    btn.Parent = page
+    btn.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    btn.Size = UDim2.new(1, -10, 0, 34)
+    btn.Font = Enum.Font.GothamMedium
+    btn.Text = "  Set Mode -> " .. modeName
+    btn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 5)
+    corner.Parent = btn
+    
+    btn.MouseButton1Click:Connect(function()
+        NovaConfig.AttackMode = modeName
+        indicatorLabel.Text = "  Active Mode: [ " .. modeName .. " ]"
+        
+        if modeName == "QUANTUM Attack" then
+            NotificationSystem:Send("QUANTUM", "Quantum attack mode engaged securely.", 3)
+        else
+            NotificationSystem:Send("Attack Mode", "Switched to " .. modeName, 2)
+        end
+    end)
+end
+
+AddModeButton(P2, "Normal Attack", ModeIndicator)
+AddModeButton(P2, "Medium Attack", ModeIndicator)
+AddModeButton(P2, "Fast Attack", ModeIndicator)
+AddModeButton(P2, "QUANTUM Attack", ModeIndicator)
+
+local P3 = CreateTab("3. Mastery")
+AddSection(P3, "Weapon, Fruit & Style Progression")
+AddToggle(P3, "Auto Weapon Mastery (Sword/Gun)", "WeaponMastery")
+AddToggle(P3, "Auto Devil Fruit Mastery", "FruitMastery")
+AddToggle(P3, "Auto Fighting Style Mastery", "FightingStyleMastery")
+
+local P4 = CreateTab("4. Items & Puzzle")
+AddSection(P4, "Legendary Items Tracker")
+AddToggle(P4, "Track Cursed Dual Katana (CDK)", "TrackCDK")
+AddToggle(P4, "Track Tushita Sword", "TrackTushita")
+AddToggle(P4, "Track Yama Sword", "TrackYama")
+AddToggle(P4, "Track Soul Guitar", "TrackSoulGuitar")
+AddToggle(P4, "Track Godhuman Style", "TrackGodhuman")
+
+local P5 = CreateTab("5. Movement")
+AddSection(P5, "Speed & Teleportation")
+AddToggle(P5, "WalkSpeed Boost (28)", "WalkSpeedVal", function(state)
+    if state then NovaConfig.WalkSpeedVal = 28 else NovaConfig.WalkSpeedVal = 16 end
+end)
+AddToggle(P5, "High Jump Boost (100)", "JumpPowerVal", function(state)
+    if state then NovaConfig.JumpPowerVal = 100 else NovaConfig.JumpPowerVal = 50 end
+end)
+
+local P6 = CreateTab("6. ESP & Tracker")
+AddSection(P6, "Entity Visualizers")
+AddToggle(P6, "Player Tracker ESP", "PlayerESP")
+AddToggle(P6, "Chest ESP (Money/Frags)", "ChestESP")
+AddToggle(P6, "Devil Fruit ESP", "FruitESP")
+AddToggle(P6, "Boss ESP", "BossESP")
+
+local P7 = CreateTab("7. PvP & Bounty")
+AddSection(P7, "Bounty & Combat Assist")
+AddToggle(P7, "Bounty Hunter Automation", "BountyHunter")
+AddToggle(P7, "Aimlock Configuration Preview", "AimlockActive")
+AddToggle(P7, "Ken Observation Haki Monitor", "KenHakiStatus")
+
+local P8 = CreateTab("8. Boss & Raid")
+AddSection(P8, "Instance & Boss Automation")
+AddToggle(P8, "Auto Boss Farm & Notifier", "AutoBoss")
+AddToggle(P8, "Elite Hunter Quest Bot", "EliteHunter")
+AddToggle(P8, "Auto Raid Instance", "AutoRaid")
+AddToggle(P8, "Server Hop Active", "ServerHopActive")
+
+local P9 = CreateTab("9. Devil Fruit")
+AddSection(P9, "Fruit Sniper & Catalog")
+AddToggle(P9, "Fruit Finder Notifier", "FruitFinder")
+AddToggle(P9, "Fruit Sniper Status", "FruitSniper")
+AddToggle(P9, "Auto Store Fruit to Inventory", "AutoStoreFruit")
+
+local P10 = CreateTab("10. Sea Events")
+AddSection(P10, "Ocean Spawns & Hazards")
+AddToggle(P10, "Sea Beast Tracker", "SeaBeastTracker")
+AddToggle(P10, "Leviathan Spawn Tracker", "LeviathanTracker")
+AddToggle(P10, "Mirage Island Tracker", "MirageTracker")
+AddToggle(P10, "Full Moon Tracker", "FullMoonTracker")
+
+local P11 = CreateTab("11. Race V4")
+AddSection(P11, "Awakening & Trial Helper")
+AddToggle(P11, "Blue Gear Location Tracker", "BlueGearTracker")
+AddToggle(P11, "Trial Checklist Active", "TrialChecklist")
+AddToggle(P11, "Lever & Full Moon Status", "LeverStatus")
+
+local P12 = CreateTab("12. Utility")
+AddSection(P12, "Performance & Safety")
+AddToggle(P12, "Anti-AFK Protection", "AntiAFK")
+AddToggle(P12, "FPS Boost & Lighting Optimizer", "FPSBoost")
+AddToggle(P12, "White Screen Battery Saver", "WhiteScreen")
+
+UtilityModule:Init()
+
+NotificationSystem:Send("Nova Hub Loaded", "Production framework successfully initialized across all 12 modules.", 5)
